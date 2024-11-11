@@ -1,3 +1,3 @@
 # VotingApp
 
-Good Luck
+This is Blockchain Based E-voting Application
