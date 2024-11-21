@@ -4,6 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
 import AppNavigation from './scr/navigation/AppNavigation'
+import Toast from 'react-native-toast-message';
+
 
 export default function App() {
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
@@ -16,26 +18,35 @@ export default function App() {
   });
 
   useEffect(() => {
-    const checkFirstLaunch = async () => {
-      const hasLaunched = await AsyncStorage.getItem('hasLaunched');
-      if (hasLaunched === null) {
-        setIsFirstLaunch(true);
-        await AsyncStorage.setItem('hasLaunched', 'true');
-      } else {
-        setIsFirstLaunch(false);
+    const prepare = async () => {
+      await SplashScreen.preventAutoHideAsync();
+      await checkFirstLaunch();
+      if (fontsLoaded) {
+        await SplashScreen.hideAsync();
       }
     };
-    checkFirstLaunch();
-  }, []);
+  
+    prepare();
+  }, [fontsLoaded]);
+  
+  const checkFirstLaunch = async () => {
+    const hasLaunched = await AsyncStorage.getItem('hasLaunched');
+    if (hasLaunched === null) {
+      setIsFirstLaunch(true);
+      await AsyncStorage.setItem('hasLaunched', 'true');
+    } else {
+      setIsFirstLaunch(false);
+    }
+  };
 
-  // Prevent rendering until fonts are loaded
   if (!fontsLoaded || isFirstLaunch === null) {
-    return null; // Avoid rendering until fonts are ready
+    return null; 
   }
 
   return (
     <NavigationContainer>
       <AppNavigation initialRoute={isFirstLaunch ? 'Onboarding' : 'HomeTabs'} />
+      <Toast />
     </NavigationContainer>
   );
 }

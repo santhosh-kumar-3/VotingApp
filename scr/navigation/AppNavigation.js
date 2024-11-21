@@ -19,8 +19,11 @@ import AddCandidateScreen from "../screens/AddCandidateScreen";
 import CreateElectionSuccess from "../components/CreateElectionSuccess";
 import AddCandidateSuccess from "../components/AddCandidateSuccess";
 import CandidateListScreen from "../screens/CandidateListScreen";
+import OtpScreen from '../screens/OtpScreen';
+import BiometricScreen from '../screens/BiometricScreen';
 
 const HomeStack = createNativeStackNavigator();
+const AuthFlow = createNativeStackNavigator();
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -40,6 +43,13 @@ const HomeStackNavigator = () => {
     </HomeStack.Navigator>
   );
 };
+
+const AuthFlowNavigator = () => (
+  <AuthFlow.Navigator>
+    <AuthFlow.Screen name="Otp" component={OtpScreen} options={{ headerShown: false }} />
+    <AuthFlow.Screen name="Biometric" component={BiometricScreen} options={{ headerShown: false }} />
+  </AuthFlow.Navigator>
+);
 
 // BottomTabs: Update the "Home" tab name to avoid conflicts
 const BottomTabs = () => {
@@ -96,7 +106,8 @@ const AppNavigation = ({ initialRoute }) => {
       <Stack.Navigator initialRouteName={initialRoute}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="HomeTabs" component={BottomTabs} options={{ headerShown: false }} />
-      </Stack.Navigator>
+        <Stack.Screen name="AuthFlow" component={AuthFlowNavigator} options={{ headerShown: false }} />
+        </Stack.Navigator>
     </>
   );
 };
