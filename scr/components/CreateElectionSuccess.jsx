@@ -27,17 +27,6 @@ const CreateElectionSuccess = () => {
       </Text>
 
       <TouchableOpacity
-        onPress={() => navigation.navigate("AddCandidate")}
-        className="w-full bg-primarycolor flex-row items-center justify-center py-3.5 rounded-md mb-4"
-      >
-        <Icon name="add" size={25} color="white" />
-        <Text className="text-white text-base text-center font-semibold">
-          {" "}
-          Add Candidate
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
         onPress={() => navigation.goBack()}
         className="w-full bg-primarycolor flex-row items-center justify-center py-3.5 rounded-md mb-4"
       >

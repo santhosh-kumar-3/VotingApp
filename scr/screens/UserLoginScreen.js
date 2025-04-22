@@ -1,54 +1,56 @@
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
-import Toast from 'react-native-toast-message';
+import { useRoute } from '@react-navigation/native';
 
 const UserLoginScreen = () => {
+  const route = useRoute();
+  const { electionId } = route.params;
   const [name, setName] = useState('');
   const [aadhaarNumber, setAadhaarNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
 
+  console.log("Election ID LoginS:", electionId);
+
   const handleLogin = async () => {
+    setIsLoading(true); // Start loading
     try {
       const q = query(
         collection(db, "voters"),
         where("aadhaarNumber", "==", aadhaarNumber)
       );
       const querySnapshot = await getDocs(q);
-  
+
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data(); 
         const mobileNumber = userData.mobileNumber;
-  
-        Toast.show({
-          type: 'success',
-          position: 'bottom',
-          text1: 'Login Successful',
-          text2: 'Proceeding to OTP verification.'
-        });
-        navigation.navigate("AuthFlow", {
-          screen: "Otp",
-          params: { mobileNumber },
-        });
+
+        // Navigate to the OTP screen
+        navigation.navigate("AuthFlow", { screen: "Otp", params: { mobileNumber, electionId } });
       } else {   
-        Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Invalid name or Aadhaar number.',
-      });
+        Alert.alert(
+          'Login Failed',
+          'Invalid name or Aadhaar number.',
+          [{ text: 'OK' }],
+          { cancelable: false }
+        );
       }
     } catch (error) {
       console.error("Error logging in:", error);
-      Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Something went wrong. Please try again.',
-      });
+      Alert.alert(
+        'Error',
+        'Something went wrong. Please try again.',
+        [{ text: 'OK' }],
+        { cancelable: false }
+      );
+    } finally {
+      setIsLoading(false); // Stop loading
     }
-  };  
+  };
 
   return (
     <SafeAreaView className="flex-1 justify-center items-center bg-white px-6">
@@ -81,9 +83,16 @@ const UserLoginScreen = () => {
 
       <TouchableOpacity
         onPress={handleLogin}
-        className="w-full bg-primarycolor py-3.5 rounded-md mb-4"
+        className={`w-full bg-primarycolor py-3.5 rounded-md mb-4 ${
+          isLoading ? "opacity-60" : ""
+        }`}
+        disabled={isLoading} // Disable button when loading
       >
-        <Text className="text-white text-base text-center font-semibold">Login</Text>
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text className="text-white text-base text-center font-semibold">Login</Text>
+        )}
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -4,7 +4,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
 import AppNavigation from './scr/navigation/AppNavigation'
-import Toast from 'react-native-toast-message';
 
 
 export default function App() {
@@ -46,7 +45,6 @@ export default function App() {
   return (
     <NavigationContainer>
       <AppNavigation initialRoute={isFirstLaunch ? 'Onboarding' : 'HomeTabs'} />
-      <Toast />
     </NavigationContainer>
   );
 }

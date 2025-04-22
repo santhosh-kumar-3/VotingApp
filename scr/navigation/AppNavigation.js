@@ -74,20 +74,25 @@ const BottomTabs = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
+          // Ensure `size` is a number
+          const iconSize = typeof size === 'number' ? size : 24; // Default to 24 if size is invalid
+
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return <Ionicons name={iconName} size={iconSize} color={color} />;
           } else if (route.name === 'Votes') {
             iconName = focused ? 'vote' : 'vote-outline';
-            return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+            return <MaterialCommunityIcons name={iconName} size={iconSize} color={color} />;
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return <Ionicons name={iconName} size={iconSize} color={color} />;
           }
         },
         tabBarActiveTintColor: '#43C6AC',
         tabBarInactiveTintColor: '#7E8A8C',
-        tabBarStyle: isKeyboardVisible ? { display: 'none' } : { height: 60, paddingBottom: 10 },
+        tabBarStyle: isKeyboardVisible
+          ? { display: 'none' }
+          : { height: 60, paddingBottom: 10 },
       })}
     >
       {/* Rename "Home" tab to "MainHomeTabs" */}
@@ -107,7 +112,7 @@ const AppNavigation = ({ initialRoute }) => {
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="HomeTabs" component={BottomTabs} options={{ headerShown: false }} />
         <Stack.Screen name="AuthFlow" component={AuthFlowNavigator} options={{ headerShown: false }} />
-        </Stack.Navigator>
+      </Stack.Navigator>
     </>
   );
 };

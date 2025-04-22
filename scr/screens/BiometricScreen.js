@@ -1,12 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import * as LocalAuthentication from "expo-local-authentication";
-import { useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import StepIndicator from "../components/StepIndicator";
-import Toast from 'react-native-toast-message';
 
 const BiometricScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { electionId } = route.params;
+
+  useEffect(() => {
+    console.log("Passed Election ID BioS:", electionId);
+  }, [electionId]);
 
   const handleBiometricAuth = async () => {
     try {
@@ -31,18 +36,24 @@ const BiometricScreen = () => {
       });
 
       if (result.success) {
-        Toast.show({
-          type: 'success',
-          position: 'bottom',
-          text1: 'Authentication Successful!',
-        });
-        navigation.navigate("HomeStackScreen");
+        Alert.alert(
+          "Success",
+          "Authentication Successful!",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate("CandidateList", { electionId })
+            },
+          ],
+          { cancelable: false }
+        );
       } else {
-        Toast.show({
-          type: 'error',
-          position: 'bottom',
-          text1: 'Authentication Failed. Please try again.',
-        });
+        Alert.alert(
+          "Authentication Failed",
+          "Please try again.",
+          [{ text: "OK" }],
+          { cancelable: false }
+        );
       }
     } catch (error) {
       Alert.alert("Error", `An error occurred: ${error.message}`);

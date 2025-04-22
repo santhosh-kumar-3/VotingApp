@@ -1,14 +1,18 @@
-import React, { useState, useRef } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import StepIndicator from "../components/StepIndicator";
-import Toast from 'react-native-toast-message';
 
 const OtpScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { mobileNumber } = route.params;
+  const { mobileNumber, electionId } = route.params;
   const [otp, setOtp] = useState(["", "", "", ""]);
+  const [isLoading, setIsLoading] = useState(false); // State to track loading status
+
+  useEffect(() => {
+    console.log("Passed Election ID OTPS:", electionId);
+  }, [electionId]);
 
   const inputs = useRef([]);
 
@@ -29,27 +33,41 @@ const OtpScreen = () => {
   };
 
   const verifyOtp = () => {
+    setIsLoading(true); // Start loading
     const enteredOtp = otp.join("");
-    if (enteredOtp === "1234") {
-      Toast.show({
-        type: 'success',
-        position: 'bottom',
-        text1: 'OTP Verified!',
-        text2: 'Step 1 Completed'
-      });
-      navigation.navigate("AuthFlow", { screen: "Biometric" });
-    } else {
-      Toast.show({
-        type: 'error',
-        position: 'bottom',
-        text1: 'Invalid OTP. Please try again.',
-      });
-    }
+    setTimeout(() => {
+      if (enteredOtp === "1234") {
+        setIsLoading(false); // Stop loading
+        Alert.alert(
+          "OTP Verified!",
+          "Step 1 Completed",
+          [
+            {
+              text: "OK",
+              onPress: () =>
+                navigation.navigate("AuthFlow", {
+                  screen: "Biometric",
+                  params: { electionId },
+                }),
+            },
+          ],
+          { cancelable: false }
+        );
+      } else {
+        setIsLoading(false); // Stop loading
+        Alert.alert(
+          "Invalid OTP",
+          "Please try again.",
+          [{ text: "OK" }],
+          { cancelable: false }
+        );
+      }
+    }, 2000); // Simulating network request delay
   };
 
   return (
     <View className="flex-1 justify-center items-center bg-white px-6">
-      <View className='absolute top-[15%]'>
+      <View className="absolute top-[15%]">
         <StepIndicator currentStep={0} totalSteps={2} />
       </View>
       <Text className="text-primarycolor text-2xl font-bold mb-8">
@@ -74,11 +92,18 @@ const OtpScreen = () => {
       </View>
       <TouchableOpacity
         onPress={verifyOtp}
-        className="w-full bg-primarycolor py-3.5 rounded-md mb-4"
+        className={`w-full bg-primarycolor py-3.5 rounded-md mb-4 ${
+          isLoading ? "opacity-60" : ""
+        }`}
+        disabled={isLoading} // Disable button when loading
       >
-        <Text className="text-white text-base text-center font-semibold">
-          Verify
-        </Text>
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text className="text-white text-base text-center font-semibold">
+            Verify
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );

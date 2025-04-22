@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from "react"; 
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Platform,
   Image,
   Alert,
+  ScrollView, // Import ScrollView
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -14,6 +15,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Icon from "react-native-vector-icons/Ionicons";
 import * as DocumentPicker from "expo-document-picker";
 import sheetimg from "../../assets/sheets.png";
+import * as XLSX from "xlsx";
+import { db } from "../../firebaseConfig"; // Import the Firebase config
+import { collection, addDoc } from "firebase/firestore"; // Import Firestore functions
 
 const CreateElectionScreen = () => {
   const navigation = useNavigation();
@@ -23,6 +27,17 @@ const CreateElectionScreen = () => {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [electionName, setElectionName] = useState("");
+  const [noOfParties, setNoOfParties] = useState("");
+  const [candidatesData, setCandidatesData] = useState([]);
+
+  const [formErrors, setFormErrors] = useState({
+    electionName: "",
+    noOfParties: "",
+    startDate: "",
+    endDate: "",
+    fileName: "",
+  });
 
   const onStartDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || startDate;
@@ -54,8 +69,6 @@ const CreateElectionScreen = () => {
         ], // Only allow Excel files
       });
 
-      console.log("Document Picker Result:", result);
-
       if (result.canceled) {
         setFileName("");
         return;
@@ -63,8 +76,20 @@ const CreateElectionScreen = () => {
 
       if (result.assets && result.assets.length > 0) {
         const file = result.assets[0];
-        console.log("File Selected:", file.name);
         setFileName(file.name);
+
+        // Read the Excel file
+        const response = await fetch(file.uri);
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+        // Get the first sheet
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        // Parse the sheet into JSON
+        const data = XLSX.utils.sheet_to_json(sheet);
+        setCandidatesData(data); 
       }
     } catch (error) {
       console.error("Error picking document:", error);
@@ -72,132 +97,205 @@ const CreateElectionScreen = () => {
     }
   };
 
+  const validateForm = () => {
+    let errors = {};
+    let isValid = true;
+
+    if (!electionName) {
+      isValid = false;
+      errors.electionName = "Election name is required.";
+    }
+
+    if (!noOfParties || isNaN(noOfParties) || parseInt(noOfParties) <= 0) {
+      isValid = false;
+      errors.noOfParties = "Number of parties is required";
+    }
+
+    if (!startDate) {
+      isValid = false;
+      errors.startDate = "Start date is required.";
+    }
+
+    if (!endDate) {
+      isValid = false;
+      errors.endDate = "End date is required.";
+    }
+
+    if (!fileName) {
+      isValid = false;
+      errors.fileName = "Candidates file is required.";
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  const handleCreateElection = async () => {
+    if (!validateForm()) return;
+
+    try {
+      const electionRef = await addDoc(collection(db, "elections"), {
+        electionName,
+        noOfParties,
+        startDate,
+        endDate,
+        candidates: candidatesData, 
+      });
+
+      console.log("Election created with ID:", electionRef.id);
+      navigation.navigate("CreateElectionSuccess");
+    } catch (error) {
+      console.error("Error adding election:", error);
+      Alert.alert("Error", "Failed to create election.");
+    }
+  };
+
   return (
-    <SafeAreaView className="flex-1 justify-center items-center bg-white px-6">
-      <Text className="text-primarycolor text-2xl font-bold mb-10 mt-5">
-        Create Election
-      </Text>
-
-      <View className="w-full mb-6">
-        <Text className="text-[16px] text-black font-normal mb-2">
-          Election Name
+    <SafeAreaView className="flex-1 bg-white px-6">
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <Text className="text-primarycolor text-2xl text-center font-bold mb-8 mt-10">
+          Create Election
         </Text>
-        <TextInput
-          placeholder="Enter election name"
-          className="w-full text-[15px] text-textColor p-4 bg-inputColor rounded-lg"
-        />
-      </View>
 
-      <View className="w-full mb-6">
-        <Text className="text-[16px] text-black font-normal mb-2">
-          No.of Parties
-        </Text>
-        <TextInput
-          placeholder="Enter number of parties"
-          className="w-full text-[15px] text-textColor p-4 bg-inputColor rounded-lg"
-        />
-      </View>
-
-      {/* Start Date Field */}
-      <View className="w-full mb-6">
-        <Text className="text-[16px] text-black font-normal mb-2">
-          Start Date
-        </Text>
-        <TouchableOpacity
-          className="flex-row items-center bg-inputColor p-4 rounded-lg"
-          onPress={() => setShowStartDatePicker(true)}
-        >
-          <Text className="flex-1 text-[15px] text-textColor">
-            {formatDate(startDate)}
+        <View className="w-full mb-6">
+          <Text className="text-[16px] text-black font-normal mb-2">
+            Election Name
           </Text>
-          <Icon name="calendar" size={20} color="gray" />
-        </TouchableOpacity>
-        {showStartDatePicker && (
-          <DateTimePicker
-            value={startDate || new Date()}
-            mode="date"
-            display="default"
-            onChange={onStartDateChange}
+          <TextInput
+            placeholder="Enter election name"
+            value={electionName}
+            onChangeText={setElectionName}
+            className="w-full text-[15px] text-textColor p-4 bg-inputColor rounded-lg"
           />
-        )}
-      </View>
+          {formErrors.electionName && (
+            <Text className="text-red-500 text-sm">{formErrors.electionName}</Text>
+          )}
+        </View>
 
-      {/* End Date Field */}
-      <View className="w-full mb-6">
-        <Text className="text-[16px] text-black font-normal mb-2">
-          End Date
-        </Text>
-        <TouchableOpacity
-          className="flex-row items-center bg-inputColor p-4 rounded-lg"
-          onPress={() => setShowEndDatePicker(true)}
-        >
-          <Text className="flex-1 text-[15px] text-textColor">
-            {formatDate(endDate)}
+        <View className="w-full mb-6">
+          <Text className="text-[16px] text-black font-normal mb-2">
+            No.of Parties
           </Text>
-          <Icon name="calendar" size={20} color="gray" />
-        </TouchableOpacity>
-        {showEndDatePicker && (
-          <DateTimePicker
-            value={endDate || new Date()}
-            mode="date"
-            display="default"
-            onChange={onEndDateChange}
+          <TextInput
+            placeholder="Enter number of parties"
+            value={noOfParties}
+            onChangeText={setNoOfParties}
+            className="w-full text-[15px] text-textColor p-4 bg-inputColor rounded-lg"
           />
-        )}
-      </View>
+          {formErrors.noOfParties && (
+            <Text className="text-red-500 text-sm">{formErrors.noOfParties}</Text>
+          )}
+        </View>
 
-      {/* File Upload Section */}
-      <View className="w-full mb-6">
-        <Text className="text-[16px] text-black font-normal mb-2">
-          Add Candidate
-        </Text>
-
-        {/* Conditionally Render the Upload Button */}
-        {!fileName && (
+        {/* Start Date Field */}
+        <View className="w-full mb-6">
+          <Text className="text-[16px] text-black font-normal mb-2">
+            Start Date
+          </Text>
           <TouchableOpacity
-            className="flex-row items-center justify-center bg-primarycolor p-4 rounded-lg shadow-md"
-            onPress={handleDocumentPick}
+            className="flex-row items-center bg-inputColor p-4 rounded-lg"
+            onPress={() => setShowStartDatePicker(true)}
           >
-            <Icon
-              name="cloud-upload-outline"
-              size={20}
-              color="white"
-              className="mr-2"
-            />
-            <Text className="text-white text-[15px] font-semibold">
-              Upload Excel File
+            <Text className="flex-1 text-[15px] text-textColor">
+              {formatDate(startDate)}
             </Text>
+            <Icon name="calendar" size={20} color="gray" />
           </TouchableOpacity>
-        )}
-
-        {/* Display Selected File Name & Placeholder */}
-        {fileName ? (
-          <View className="flex-row items-center mt-4 bg-gray-100 rounded-lg p-3 shadow-md">
-            <Image
-              source={sheetimg}
-              style={{ width: 40, height: 40, marginRight: 8 }}
+          {showStartDatePicker && (
+            <DateTimePicker
+              value={startDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={onStartDateChange}
             />
-            <Text className="text-[16px] text-black flex-1">{fileName}</Text>
-            <TouchableOpacity onPress={() => setFileName("")}>
-              <Icon name="close-circle-outline" size={20} color="red" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <Text className="text-[15px] text-gray-400 mt-4 text-center">
-            No file selected
-          </Text>
-        )}
-      </View>
+          )}
+          {formErrors.startDate && (
+            <Text className="text-red-500 text-sm">{formErrors.startDate}</Text>
+          )}
+        </View>
 
-      {/* Create Button */}
-      <TouchableOpacity
-        onPress={() => navigation.navigate("CreateElectionSuccess")}
-        className="w-full bg-primarycolor py-3.5 rounded-md mt-4 mb-4"
-      >
-        <Text className="text-white text-base text-center font-semibold">
-          Create
-        </Text>
-      </TouchableOpacity>
+        {/* End Date Field */}
+        <View className="w-full mb-6">
+          <Text className="text-[16px] text-black font-normal mb-2">
+            End Date
+          </Text>
+          <TouchableOpacity
+            className="flex-row items-center bg-inputColor p-4 rounded-lg"
+            onPress={() => setShowEndDatePicker(true)}
+          >
+            <Text className="flex-1 text-[15px] text-textColor">
+              {formatDate(endDate)}
+            </Text>
+            <Icon name="calendar" size={20} color="gray" />
+          </TouchableOpacity>
+          {showEndDatePicker && (
+            <DateTimePicker
+              value={endDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={onEndDateChange}
+            />
+          )}
+          {formErrors.endDate && (
+            <Text className="text-red-500 text-sm">{formErrors.endDate}</Text>
+          )}
+        </View>
+
+        {/* File Upload Section */}
+        <View className="w-full mb-6">
+          <Text className="text-[16px] text-black font-normal mb-2">
+            Add Candidate
+          </Text>
+
+          {!fileName && (
+            <TouchableOpacity
+              className="flex-row items-center justify-center bg-primarycolor p-4 rounded-lg shadow-md"
+              onPress={handleDocumentPick}
+            >
+              <Icon
+                name="cloud-upload-outline"
+                size={20}
+                color="white"
+                className="mr-2"
+              />
+              <Text className="text-white text-[15px] font-semibold">
+                Upload Excel File
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {fileName ? (
+            <View className="flex-row items-center mt-4 bg-gray-100 rounded-lg p-3 shadow-md">
+              <Image
+                source={sheetimg}
+                style={{ width: 40, height: 40, marginRight: 8 }}
+              />
+              <Text className="text-[16px] text-black flex-1">{fileName}</Text>
+              <TouchableOpacity onPress={() => setFileName("")}>
+                <Icon name="close-circle-outline" size={20} color="red" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Text className="text-[15px] text-gray-400 mt-4 text-center">
+              No file selected
+            </Text>
+          )}
+
+          {formErrors.fileName && (
+            <Text className="text-red-500 text-sm">{formErrors.fileName}</Text>
+          )}
+        </View>
+
+        {/* Create Button */}
+        <TouchableOpacity
+          onPress={handleCreateElection}
+          className="w-full bg-primarycolor py-3.5 rounded-md mt-4 mb-4"
+        >
+          <Text className="text-white text-base text-center font-semibold">
+            Create
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };
