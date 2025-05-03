@@ -14,10 +14,10 @@ const UserLoginScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
 
-  console.log("Election ID LoginS:", electionId);
+  // console.log("Election ID LoginS:", electionId);
 
   const handleLogin = async () => {
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
     try {
       const q = query(
         collection(db, "voters"),
@@ -29,7 +29,6 @@ const UserLoginScreen = () => {
         const userData = querySnapshot.docs[0].data(); 
         const mobileNumber = userData.mobileNumber;
 
-        // Navigate to the OTP screen
         navigation.navigate("AuthFlow", { screen: "Otp", params: { mobileNumber, electionId } });
       } else {   
         Alert.alert(
@@ -48,7 +47,7 @@ const UserLoginScreen = () => {
         { cancelable: false }
       );
     } finally {
-      setIsLoading(false); // Stop loading
+      setIsLoading(false);
     }
   };
 

@@ -16,8 +16,8 @@ import Icon from "react-native-vector-icons/Ionicons";
 import * as DocumentPicker from "expo-document-picker";
 import sheetimg from "../../assets/sheets.png";
 import * as XLSX from "xlsx";
-import { db } from "../../firebaseConfig"; // Import the Firebase config
-import { collection, addDoc } from "firebase/firestore"; // Import Firestore functions
+import { db } from "../../firebaseConfig";
+import { collection, addDoc } from "firebase/firestore";
 
 const CreateElectionScreen = () => {
   const navigation = useNavigation();

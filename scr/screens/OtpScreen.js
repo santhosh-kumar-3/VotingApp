@@ -8,7 +8,7 @@ const OtpScreen = () => {
   const navigation = useNavigation();
   const { mobileNumber, electionId } = route.params;
   const [otp, setOtp] = useState(["", "", "", ""]);
-  const [isLoading, setIsLoading] = useState(false); // State to track loading status
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     console.log("Passed Election ID OTPS:", electionId);
