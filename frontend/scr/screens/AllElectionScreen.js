@@ -1,20 +1,27 @@
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ElectionCard from "../components/ElectionCard";
 import { Ionicons } from "@expo/vector-icons";
 import sampleimg1 from "../../assets/sampleImg1.png";
 import { useNavigation } from "@react-navigation/native";
-import { getFirestore, collection, getDocs } from "firebase/firestore"; 
+import { getFirestore, collection, getDocs } from "firebase/firestore";
+import LottieView from "lottie-react-native";
 
 const AllElectionScreen = () => {
   const [elections, setElections] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation();
 
   useEffect(() => {
     const fetchElections = async () => {
-      setIsLoading(true); 
+      setIsLoading(true);
       try {
         const db = getFirestore();
         const electionsCollection = collection(db, "elections");
@@ -49,17 +56,22 @@ const AllElectionScreen = () => {
     });
   };
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text className="text-gray-500 mt-4">Loading elections...</Text>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
+      {isLoading && (
+        <View className="absolute top-0 left-0 right-0 bottom-0 z-10 justify-center items-center bg-white/60">
+          <LottieView
+            source={require("../../assets/animation/loading-animation.json")}
+            autoPlay
+            loop
+            style={{ width: 120, height: 120 }}
+          />
+          <Text className="text-gray-500 mt-4 text-base">
+            Loading elections...
+          </Text>
+        </View>
+      )}
+
       <Text className="self-center my-3 text-2xl font-bold">Elections</Text>
 
       <FlatList
