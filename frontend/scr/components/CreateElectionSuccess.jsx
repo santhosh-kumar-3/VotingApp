@@ -3,7 +3,6 @@ import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LottieView from "lottie-react-native";
 import { TouchableOpacity } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 
 const CreateElectionSuccess = () => {
@@ -27,12 +26,12 @@ const CreateElectionSuccess = () => {
       </Text>
 
       <TouchableOpacity
-        onPress={() => navigation.goBack()}
+        onPress={() => navigation.navigate('AllElection')}
         className="w-full bg-primarycolor flex-row items-center justify-center py-3.5 rounded-md mb-4"
       >
-        <Icon name="arrow-back" size={23} color="white" />
+        
         <Text className="text-white text-base text-center font-semibold">
-          {" "}Back
+          View Election
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

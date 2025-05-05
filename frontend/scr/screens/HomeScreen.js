@@ -2,11 +2,31 @@ import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-
+  
+  const getStoredAdminCredentials = async () => {
+      try {
+        const username = await AsyncStorage.getItem('adminUsername');
+        const password = await AsyncStorage.getItem('adminPassword');
+    
+        if (username !== null && password !== null) {
+          console.log(`Stored Admin - Username: ${username}, Password: ${password}`);
+          navigation.navigate('createElection');
+  
+        } else {
+          navigation.navigate('AdminLogin')
+          console.log("No admin credentials found.");;
+        }
+      } catch (error) {
+        navigation.navigate('AdminLogin')
+        console.log("Error", "Unauthorized admin. Please try again.");
+      }
+    };
+  
   return (
     <SafeAreaView className="flex-1 bg-gradient-to-b from-gray-100 to-gray-200">
       {/* Header Section */}
@@ -20,7 +40,7 @@ const HomeScreen = () => {
       <View className="flex-1 mt-6 px-4 space-y-5">
         {/* Create Election */}
         <TouchableOpacity
-          onPress={() => navigation.navigate("AdminLogin")}
+          onPress={() => getStoredAdminCredentials()}
           className="bg-white flex-row items-center p-4 rounded-lg shadow-md"
           activeOpacity={0.8}
         >

@@ -19,10 +19,12 @@ import AddCandidateScreen from "../screens/AddCandidateScreen";
 import CreateElectionSuccess from "../components/CreateElectionSuccess";
 import AddCandidateSuccess from "../components/AddCandidateSuccess";
 import CandidateListScreen from "../screens/CandidateListScreen";
-import OtpScreen from '../screens/OtpScreen';
-import BiometricScreen from '../screens/BiometricScreen';
+import OtpScreen from "../screens/OtpScreen";
+import BiometricScreen from "../screens/BiometricScreen";
+import EachVotesScreen from "../screens/EachVotesScreen";
 
 const HomeStack = createNativeStackNavigator();
+const VotesStack = createNativeStackNavigator();
 const AuthFlow = createNativeStackNavigator();
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,24 +32,81 @@ const Tab = createBottomTabNavigator();
 const HomeStackNavigator = () => {
   return (
     <HomeStack.Navigator>
-      <HomeStack.Screen name="HomeStackScreen" component={HomeScreen} options={{ headerShown: false }} />
-      <HomeStack.Screen name="AdminLogin" component={AdminLoginScreen} options={{ headerShown: false }} />
-      <HomeStack.Screen name="UserLogin" component={UserLoginScreen} options={{ headerShown: false }} />
-      <HomeStack.Screen name="UserSignup" component={UserSignupScreen} options={{ headerShown: false }} />
-      <HomeStack.Screen name="AllElection" component={AllElectionScreen} options={{ headerShown: false }} />
-      <HomeStack.Screen name="createElection" component={CreateElectionScreen} options={{ headerShown: false }} />
-      <HomeStack.Screen name="AddCandidate" component={AddCandidateScreen} options={{ headerShown: false }} />
-      <HomeStack.Screen name="CreateElectionSuccess" component={CreateElectionSuccess} options={{ headerShown: false }} />
-      <HomeStack.Screen name="AddCandidateSuccess" component={AddCandidateSuccess} options={{ headerShown: false }} />
-      <HomeStack.Screen name="CandidateList" component={CandidateListScreen} options={{ headerShown: false }} />
+      <HomeStack.Screen
+        name="HomeStackScreen"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="AdminLogin"
+        component={AdminLoginScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="UserLogin"
+        component={UserLoginScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="UserSignup"
+        component={UserSignupScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="AllElection"
+        component={AllElectionScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="createElection"
+        component={CreateElectionScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="AddCandidate"
+        component={AddCandidateScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="CreateElectionSuccess"
+        component={CreateElectionSuccess}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="AddCandidateSuccess"
+        component={AddCandidateSuccess}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="CandidateList"
+        component={CandidateListScreen}
+        options={{ headerShown: false }}
+      />
     </HomeStack.Navigator>
+  );
+};
+
+const VotesStackNavigator = () => {
+  return (
+    <VotesStack.Navigator screenOptions={{ headerShown: false }}>
+      <VotesStack.Screen name="VotesMain" component={VotesScreen} />
+      <VotesStack.Screen name="EachVotesScreen" component={EachVotesScreen} />
+    </VotesStack.Navigator>
   );
 };
 
 const AuthFlowNavigator = () => (
   <AuthFlow.Navigator>
-    <AuthFlow.Screen name="Otp" component={OtpScreen} options={{ headerShown: false }} />
-    <AuthFlow.Screen name="Biometric" component={BiometricScreen} options={{ headerShown: false }} />
+    <AuthFlow.Screen
+      name="Otp"
+      component={OtpScreen}
+      options={{ headerShown: false }}
+    />
+    <AuthFlow.Screen
+      name="Biometric"
+      component={BiometricScreen}
+      options={{ headerShown: false }}
+    />
   </AuthFlow.Navigator>
 );
 
@@ -56,12 +115,18 @@ const BottomTabs = () => {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      setKeyboardVisible(true);
-    });
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-    });
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
 
     return () => {
       keyboardDidHideListener.remove();
@@ -75,30 +140,48 @@ const BottomTabs = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           // Ensure `size` is a number
-          const iconSize = typeof size === 'number' ? size : 24; // Default to 24 if size is invalid
+          const iconSize = typeof size === "number" ? size : 24; // Default to 24 if size is invalid
 
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
+          if (route.name === "Home") {
+            iconName = focused ? "home" : "home-outline";
             return <Ionicons name={iconName} size={iconSize} color={color} />;
-          } else if (route.name === 'Votes') {
-            iconName = focused ? 'vote' : 'vote-outline';
-            return <MaterialCommunityIcons name={iconName} size={iconSize} color={color} />;
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === "Votes") {
+            iconName = focused ? "vote" : "vote-outline";
+            return (
+              <MaterialCommunityIcons
+                name={iconName}
+                size={iconSize}
+                color={color}
+              />
+            );
+          } else if (route.name === "Profile") {
+            iconName = focused ? "person" : "person-outline";
             return <Ionicons name={iconName} size={iconSize} color={color} />;
           }
         },
-        tabBarActiveTintColor: '#43C6AC',
-        tabBarInactiveTintColor: '#7E8A8C',
+        tabBarActiveTintColor: "#43C6AC",
+        tabBarInactiveTintColor: "#7E8A8C",
         tabBarStyle: isKeyboardVisible
-          ? { display: 'none' }
+          ? { display: "none" }
           : { height: 60, paddingBottom: 10 },
       })}
     >
       {/* Rename "Home" tab to "MainHomeTabs" */}
-      <Tab.Screen name="Home" component={HomeStackNavigator} options={{ headerShown: false }} />
-      <Tab.Screen name="Votes" component={VotesScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      <Tab.Screen
+        name="Home"
+        component={HomeStackNavigator}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Votes"
+        component={VotesStackNavigator}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
     </Tab.Navigator>
   );
 };
@@ -109,9 +192,21 @@ const AppNavigation = ({ initialRoute }) => {
     <>
       <StatusBar style="dark" backgroundColor="white" />
       <Stack.Navigator initialRouteName={initialRoute}>
-        <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="HomeTabs" component={BottomTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="AuthFlow" component={AuthFlowNavigator} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="HomeTabs"
+          component={BottomTabs}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AuthFlow"
+          component={AuthFlowNavigator}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </>
   );

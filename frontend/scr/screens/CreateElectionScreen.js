@@ -1,4 +1,4 @@
-import React, { useState } from "react"; 
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,15 +12,21 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/Ionicons";
 import * as DocumentPicker from "expo-document-picker";
 import sheetimg from "../../assets/sheets.png";
 import * as XLSX from "xlsx";
+import { ethers } from "ethers";
+import ABI from "../../res/ABI.json";
 import { db } from "../../firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
+import { INFURA_URL, CONTRACT_ADDRESS, PRIVATE_KEY } from "@env";
+import LottieView from "lottie-react-native";
 
 const CreateElectionScreen = () => {
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
 
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -30,6 +36,11 @@ const CreateElectionScreen = () => {
   const [electionName, setElectionName] = useState("");
   const [noOfParties, setNoOfParties] = useState("");
   const [candidatesData, setCandidatesData] = useState([]);
+  const candidateIds = candidatesData.map((c) => c["Candidate Id"]);
+
+  const provider = new ethers.JsonRpcProvider(INFURA_URL);
+  const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+  const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
   const [formErrors, setFormErrors] = useState({
     electionName: "",
@@ -89,7 +100,7 @@ const CreateElectionScreen = () => {
 
         // Parse the sheet into JSON
         const data = XLSX.utils.sheet_to_json(sheet);
-        setCandidatesData(data); 
+        setCandidatesData(data);
       }
     } catch (error) {
       console.error("Error picking document:", error);
@@ -131,7 +142,16 @@ const CreateElectionScreen = () => {
   };
 
   const handleCreateElection = async () => {
-    if (!validateForm()) return;
+   
+    if (!validateForm()) {
+      return; 
+    }
+
+    setLoading(true);
+
+    const username = await AsyncStorage.getItem("adminUsername");
+    const password = await AsyncStorage.getItem("adminPassword");
+    console.log(username, password);
 
     try {
       const electionRef = await addDoc(collection(db, "elections"), {
@@ -139,20 +159,59 @@ const CreateElectionScreen = () => {
         noOfParties,
         startDate,
         endDate,
-        candidates: candidatesData, 
+        candidates: candidatesData,
       });
 
+      const numParties = candidatesData.length;
+      const startEpoch = Math.floor(new Date(startDate).getTime() / 1000);
+      const endEpoch = Math.floor(new Date(endDate).getTime() / 1000);
+      console.log(
+        electionRef.id,
+        numParties,
+        candidateIds,
+        startEpoch,
+        endEpoch,
+        username,
+        password
+      );
+      const tx = await contract.createElection(
+        electionRef.id.toString(),
+        Number(numParties),
+        candidateIds.map(String),
+        Number(startEpoch),
+        Number(endEpoch),
+        username,
+        password
+      );
+      console.log(
+        electionRef.id,
+        numParties,
+        candidateIds,
+        startEpoch,
+        endEpoch,
+        username,
+        password
+      );
+      console.log("Transaction sent:", tx.hash);
+      const receipt = await tx.wait();
+      console.log("Transaction confirmed:", receipt.hash);
       console.log("Election created with ID:", electionRef.id);
       navigation.navigate("CreateElectionSuccess");
     } catch (error) {
       console.error("Error adding election:", error);
       Alert.alert("Error", "Failed to create election.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white px-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text className="text-primarycolor text-2xl text-center font-bold mb-8 mt-10">
           Create Election
         </Text>
@@ -168,7 +227,9 @@ const CreateElectionScreen = () => {
             className="w-full text-[15px] text-textColor p-4 bg-inputColor rounded-lg"
           />
           {formErrors.electionName && (
-            <Text className="text-red-500 text-sm">{formErrors.electionName}</Text>
+            <Text className="text-red-500 text-sm">
+              {formErrors.electionName}
+            </Text>
           )}
         </View>
 
@@ -183,7 +244,9 @@ const CreateElectionScreen = () => {
             className="w-full text-[15px] text-textColor p-4 bg-inputColor rounded-lg"
           />
           {formErrors.noOfParties && (
-            <Text className="text-red-500 text-sm">{formErrors.noOfParties}</Text>
+            <Text className="text-red-500 text-sm">
+              {formErrors.noOfParties}
+            </Text>
           )}
         </View>
 
@@ -288,14 +351,29 @@ const CreateElectionScreen = () => {
 
         {/* Create Button */}
         <TouchableOpacity
+          disabled={loading}
           onPress={handleCreateElection}
-          className="w-full bg-primarycolor py-3.5 rounded-md mt-4 mb-4"
+          className={`w-full bg-primarycolor py-3.5 rounded-md mb-4 ${
+            loading ? "opacity-60" : ""
+          }`}
         >
           <Text className="text-white text-base text-center font-semibold">
             Create
           </Text>
         </TouchableOpacity>
       </ScrollView>
+      {/* Fullscreen Loading Overlay */}
+      {loading && (
+        <View className="absolute top-0 left-0 right-0 bottom-0 bg-black/40 z-10 justify-center items-center">
+          <LottieView
+            source={require("../../assets/animation/loading-animation.json")}
+            autoPlay
+            loop
+            style={{ width: 150, height: 150 }}
+          />
+          <Text className="text-gray-300 mt-4 text-base">Creating Election...</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

@@ -83,16 +83,28 @@ const OtpScreen = () => {
       const data = await response.json();
       setIsLoading(false);
       if (data.success) {
-        Alert.alert("OTP Verified", "Step 1 Completed", [
-          {
-            text: "OK",
-            onPress: () =>
-              navigation.navigate("AuthFlow", {
-                screen: "Biometric",
-                params: { electionId },
-              }),
-          },
-        ]);
+        // Alert.alert("OTP Verified", "Step 1 Completed", [
+        //   {
+        //     text: "OK",
+        //     onPress: () =>
+        //       navigation.navigate("AuthFlow", {
+        //         screen: "Biometric",
+        //         params: { electionId },
+        //       }),
+        //   },
+        // ]);
+        Alert.alert(
+          "Success",
+          "Authentication Successful!",
+          [
+            {
+              text: "OK",
+              onPress: () =>
+                navigation.navigate("CandidateList", { electionId }),
+            },
+          ],
+          { cancelable: false }
+        );
       } else {
         Alert.alert("Invalid OTP", "Please try again.");
       }
@@ -159,9 +171,7 @@ const OtpScreen = () => {
               resendTimer > 0 ? "text-gray-400" : "text-primarycolor"
             }`}
           >
-            {resendTimer > 0
-              ? `Resend in ${resendTimer}s`
-              : "Resend Code"}
+            {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend Code"}
           </Text>
         </TouchableOpacity>
       </View>
