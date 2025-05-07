@@ -19,6 +19,7 @@ const OtpScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(30); // seconds
   const inputs = useRef([]);
+  
 
   useEffect(() => {
     let interval;
@@ -52,7 +53,7 @@ const OtpScreen = () => {
   const sendOtp = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://192.168.31.77:5000/send-otp", {
+      const response = await fetch("http://192.168.152.10:5000/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber: mobileNumber }),
@@ -75,7 +76,7 @@ const OtpScreen = () => {
     setIsLoading(true);
     const enteredOtp = otp.join("");
     try {
-      const response = await fetch("http://192.168.31.77:5000/verify-otp", {
+      const response = await fetch("http://192.168.152.10:5000/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber: mobileNumber, otp: enteredOtp }),
@@ -83,28 +84,28 @@ const OtpScreen = () => {
       const data = await response.json();
       setIsLoading(false);
       if (data.success) {
-        // Alert.alert("OTP Verified", "Step 1 Completed", [
-        //   {
-        //     text: "OK",
-        //     onPress: () =>
-        //       navigation.navigate("AuthFlow", {
-        //         screen: "Biometric",
-        //         params: { electionId },
-        //       }),
-        //   },
-        // ]);
-        Alert.alert(
-          "Success",
-          "Authentication Successful!",
-          [
-            {
-              text: "OK",
-              onPress: () =>
-                navigation.navigate("CandidateList", { electionId }),
-            },
-          ],
-          { cancelable: false }
-        );
+        Alert.alert("OTP Verified", "Step 1 Completed", [
+          {
+            text: "OK",
+            onPress: () =>
+              navigation.navigate("AuthFlow", {
+                screen: "Biometric",
+                params: { electionId },
+              }),
+          },
+        ]);
+        // Alert.alert(
+        //   "Success",
+        //   "Authentication Successful!",
+        //   [
+        //     {
+        //       text: "OK",
+        //       onPress: () =>
+        //         navigation.navigate("CandidateList", { electionId }),
+        //     },
+        //   ],
+        //   { cancelable: false }
+        // );
       } else {
         Alert.alert("Invalid OTP", "Please try again.");
       }
